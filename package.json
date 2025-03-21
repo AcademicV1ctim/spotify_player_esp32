@@ -1,0 +1,10 @@
+{
+  "dependencies": {
+    "axios": "^1.8.4",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "node": "^20.19.0",
+    "node.js": "^0.0.1-security",
+    "querystring": "^0.2.1"
+  }
+}
