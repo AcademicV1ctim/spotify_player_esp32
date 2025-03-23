@@ -1,17 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
-<script src="./index.js"></script>
-<link rel="stylesheet" href="./index.css">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Homepage</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Homepage</title>
+  <link rel="stylesheet" href="./index.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="./index.js" defer></script>
 </head>
 <body>
-    <h1>Welcome</h1>
-    <h2>Please log in here:</h2>
-    <div>
-        https://accounts.spotify.com/authorize?client_id=d831b0f307a1448b8ba4aa26c71f1496&response_type=code&redirect_uri=&scope=user-read-playback-state%20user-read-currently-playing%20user-modify-playback-state
-    </div>
+  <h1>Welcome</h1>
+  <h2>Please log in here:</h2>
+  <div id="qrcode"></div>
 </body>
 </html>
