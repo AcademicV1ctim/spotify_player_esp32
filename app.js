@@ -5,10 +5,10 @@ const querystring = require('querystring');
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Replace these with your actual Spotify app credentials and redirect URI.
+// Use the REDIRECT_URI environment variable if available; otherwise, default to localhost (for local testing)
 const clientID = process.env.CLIENT_ID;
 const clientSecret = process.env.CLIENT_SECRET;
-const redirectURI = "http://localhost:3000/callback";
+const redirectURI = "https://spotify-player-esp32.onrender.com/callback";
 
 // Endpoint to redirect user to Spotify's OAuth page
 app.get('/login', (req, res) => {
@@ -26,7 +26,7 @@ app.get('/login', (req, res) => {
 // OAuth callback endpoint
 app.get('/callback', async (req, res) => {
   const code = req.query.code || null;
-  if (code === null) {
+  if (!code) {
     return res.status(400).send('Error: No authorization code provided.');
   }
 
@@ -56,6 +56,36 @@ app.get('/callback', async (req, res) => {
   } catch (error) {
     console.error("Error exchanging code for tokens:", error);
     res.status(500).send('Error retrieving tokens.');
+  }
+});
+
+// Refresh token endpoint
+app.get('/refresh', async (req, res) => {
+  const refreshToken = req.query.refresh_token;
+  if (!refreshToken) {
+    return res.status(400).send('Missing refresh token.');
+  }
+
+  const tokenUrl = 'https://accounts.spotify.com/api/token';
+  const data = {
+    grant_type: 'refresh_token',
+    refresh_token: refreshToken
+  };
+
+  const headers = {
+    'Authorization': 'Basic ' + Buffer.from(clientID + ':' + clientSecret).toString('base64'),
+    'Content-Type': 'application/x-www-form-urlencoded'
+  };
+
+  try {
+    const response = await axios.post(tokenUrl, querystring.stringify(data), { headers: headers });
+    res.json({
+      access_token: response.data.access_token,
+      expires_in: response.data.expires_in
+    });
+  } catch (error) {
+    console.error("Error refreshing token:", error);
+    res.status(500).send('Error refreshing token.');
   }
 });
 
