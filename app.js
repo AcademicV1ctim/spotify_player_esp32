@@ -10,6 +10,14 @@ const clientID = process.env.CLIENT_ID;
 const clientSecret = process.env.CLIENT_SECRET;
 const redirectURI = "https://spotify-player-esp32.onrender.com/callback";
 
+const path = require('path');
+app.use(express.static(path.join(__dirname, 'public')));
+
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+
 // Endpoint to redirect user to Spotify's OAuth page
 app.get('/login', (req, res) => {
   const scope = 'user-read-playback-state user-read-currently-playing user-modify-playback-state';
