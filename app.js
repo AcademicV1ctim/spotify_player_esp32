@@ -4,22 +4,26 @@ const axios = require('axios');
 const querystring = require('querystring');
 const app = express();
 const port = process.env.PORT || 3000;
-
-// Use the REDIRECT_URI environment variable if available; otherwise, default to localhost (for local testing)
-const clientID = process.env.CLIENT_ID;
-const clientSecret = process.env.CLIENT_SECRET;
-const redirectURI = "https://spotify-player-esp32.onrender.com/callback";
-
+const http = require('http');
+const WebSocket = require('ws');
 const path = require('path');
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-app.get('/callback', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'success.html'));
-});
+// Spotify credentials and redirect URI (update with your Render domain)
+const clientID = process.env.CLIENT_ID;
+const clientSecret = process.env.CLIENT_SECRET;
+const redirectURI = "https://spotify-player-esp32.onrender.com/callback";
+
+// In-memory token storage
+let tokenData = {
+  access_token: null,
+  refresh_token: null,
+};
 
 // Endpoint to redirect user to Spotify's OAuth page
 app.get('/login', (req, res) => {
@@ -34,7 +38,7 @@ app.get('/login', (req, res) => {
   res.redirect(authUrl);
 });
 
-// OAuth callback endpoint
+// OAuth callback endpoint: Exchange code for tokens, broadcast them, then send success page
 app.get('/callback', async (req, res) => {
   const code = req.query.code || null;
   if (!code) {
@@ -55,22 +59,26 @@ app.get('/callback', async (req, res) => {
 
   try {
     const response = await axios.post(tokenUrl, querystring.stringify(data), { headers: headers });
-    const access_token = response.data.access_token;
-    const refresh_token = response.data.refresh_token;
+    tokenData.access_token = response.data.access_token;
+    tokenData.refresh_token = response.data.refresh_token;
+    console.log("Tokens generated:", tokenData);
 
-    // For now, just display the tokens; in a real application, you might store them or use them to make API calls.
-    res.send(`
-      <h2>Authentication Successful!</h2>
-      <p><strong>Access Token:</strong> ${access_token}</p>
-      <p><strong>Refresh Token:</strong> ${refresh_token}</p>
-    `);
+    // Broadcast token data to all connected WebSocket clients
+    wss.clients.forEach((client) => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(JSON.stringify(tokenData));
+      }
+    });
+
+    // Send the success page to the user
+    res.sendFile(path.join(__dirname, 'public', 'success.html'));
   } catch (error) {
     console.error("Error exchanging code for tokens:", error);
     res.status(500).send('Error retrieving tokens.');
   }
 });
 
-// Refresh token endpoint
+// Refresh token endpoint (if needed)
 app.get('/refresh', async (req, res) => {
   const refreshToken = req.query.refresh_token;
   if (!refreshToken) {
@@ -100,6 +108,21 @@ app.get('/refresh', async (req, res) => {
   }
 });
 
-app.listen(port, () => {
+// Create HTTP server (Render handles TLS termination so external connections are HTTPS)
+const server = http.createServer(app);
+
+// Create a WebSocket server attached to the same HTTP server
+const wss = new WebSocket.Server({ server });
+
+wss.on('connection', (ws) => {
+  console.log('Client connected via WebSocket');
+  // Optionally, send a welcome message
+  ws.send(JSON.stringify({ message: "Welcome to the secure WebSocket server" }));
+  ws.on('message', (message) => {
+    console.log('Received from client:', message);
+  });
+});
+
+server.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });
