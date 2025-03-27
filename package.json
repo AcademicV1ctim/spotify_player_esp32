@@ -5,6 +5,7 @@
     "express": "^4.21.2",
     "node": "^20.19.0",
     "node.js": "^0.0.1-security",
-    "querystring": "^0.2.1"
+    "querystring": "^0.2.1",
+    "ws": "^8.18.1"
   }
 }
