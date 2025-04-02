@@ -7,6 +7,9 @@ Current features implmented:
 Features to be implemented: 
 WebSocket to connect to the esp32
 
+
+Previous iteration:
+
 #include <WiFi.h>
 #include <WebServer.h>
 #include <HTTPClient.h>
