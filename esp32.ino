@@ -1,5 +1,3 @@
-// Currently Websocket not working 
-
 #include <WiFi.h>
 #include <HTTPClient.h>
 #include <WiFiClientSecure.h>
@@ -236,7 +234,6 @@ void connectWebSocket() {
     Serial.println("Failed to connect to WebSocket server");
   }
 }
-
 
 // -------------------------
 // Spotify API Request Functions
