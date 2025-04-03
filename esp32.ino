@@ -203,7 +203,31 @@ void connectToWiFi() {
 // WebSocket Client Integration
 WebsocketsClient wsClient;
 
-// Callback to process incoming WebSocket messages (token data)
+// Embedded CA certificate for your Render-hosted WebSocket server (GTS Root R4)
+const char* rootCACert = R"EOF(
+-----BEGIN CERTIFICATE-----
+MIIDejCCAmKgAwIBAgIQf+UwvzMTQ77dghYQST2KGzANBgkqhkiG9w0BAQsFADBX
+MQswCQYDVQQGEwJCRTEZMBcGA1UEChMQR2xvYmFsU2lnbiBudi1zYTEQMA4GA1UE
+CxMHUm9vdCBDQTEbMBkGA1UEAxMSR2xvYmFsU2lnbiBSb290IENBMB4XDTIzMTEx
+NTAzNDMyMVoXDTI4MDEyODAwMDA0MlowRzELMAkGA1UEBhMCVVMxIjAgBgNVBAoT
+GUdvb2dsZSBUcnVzdCBTZXJ2aWNlcyBMTEMxFDASBgNVBAMTC0dUUyBSb290IFI0
+MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAE83Rzp2iLYK5DuDXFgTB7S0md+8Fhzube
+Rr1r1WEYNa5A3XP3iZEwWus87oV8okB2O6nGuEfYKueSkWpz6bFyOZ8pn6KY019e
+WIZlD6GEZQbR3IvJx3PIjGov5cSr0R2Ko4H/MIH8MA4GA1UdDwEB/wQEAwIBhjAd
+BgNVHSUEFjAUBggrBgEFBQcDAQYIKwYBBQUHAwIwDwYDVR0TAQH/BAUwAwEB/zAd
+BgNVHQ4EFgQUgEzW63T/STaj1dj8tT7FavCUHYwwHwYDVR0jBBgwFoAUYHtmGkUN
+l8qJUC99BM00qP/8/UswNgYIKwYBBQUHAQEEKjAoMCYGCCsGAQUFBzAChhpodHRw
+Oi8vaS5wa2kuZ29vZy9nc3IxLmNydDAtBgNVHR8EJjAkMCKgIKAehhxodHRwOi8v
+Yy5wa2kuZ29vZy9yL2dzcjEuY3JsMBMGA1UdIAQMMAowCAYGZ4EMAQIBMA0GCSqG
+SIb3DQEBCwUAA4IBAQAYQrsPBtYDh5bjP2OBDwmkoWhIDDkic574y04tfzHpn+cJ
+odI2D4SseesQ6bDrarZ7C30ddLibZatoKiws3UL9xnELz4ct92vID24FfVbiI1hY
++SW6FoVHkNeWIP0GCbaM4C6uVdF5dTUsMVs/ZbzNnIdCp5Gxmx5ejvEau8otR/Cs
+kGN+hr/W5GvT1tMBjgWKZ1i4//emhA1JG1BbPzoLJQvyEotc03lXjTaCzv8mEbep
+8RqZ7a2CPsgRbuvTPBwcOMBBmuFeU88+FSBX6+7iP0il8b4Z0QFqIwwMHfs/L6K1
+vepuoxtGzi4CZ68zJpiq1UvSqTbFJjtbD4seiMHl
+-----END CERTIFICATE-----
+)EOF";
+
 void onTokenReceived(WebsocketsMessage message) {
   Serial.println("WebSocket Message received: " + message.data());
   StaticJsonDocument<256> doc;
@@ -217,6 +241,15 @@ void onTokenReceived(WebsocketsMessage message) {
       refreshToken = doc["refresh_token"].as<String>();
       Serial.println("Updated Refresh Token: " + refreshToken);
     }
+    if (doc.containsKey("expires_in")) {
+      tokenExpiryTime = millis() + doc["expires_in"].as<unsigned long>() * 1000;
+      Serial.print("Token expires in (s): ");
+      Serial.println(doc["expires_in"].as<unsigned long>());
+    } else {
+      // Default to 1 hour if not provided
+      tokenExpiryTime = millis() + 3600000;
+      Serial.println("Token expiry not provided, defaulting to 1 hour");
+    }
   } else {
     Serial.println("Failed to parse WebSocket message JSON:");
     Serial.println(err.c_str());
@@ -224,10 +257,12 @@ void onTokenReceived(WebsocketsMessage message) {
 }
 
 void connectWebSocket() {
-  // Set the callback to handle incoming token data
   wsClient.onMessage(onTokenReceived);
   
-  // Attempt connection to your Render endpoint explicitly on port 443.
+  // Set the CA certificate for proper TLS validation for your Render server
+  wsClient.setCACert(rootCACert);
+  
+  // Connect to your Render-hosted WebSocket endpoint on port 443
   if (wsClient.connect("wss://spotify-player-esp32.onrender.com:443")) {
     Serial.println("Connected to WebSocket server");
   } else {
@@ -238,14 +273,13 @@ void connectWebSocket() {
 // -------------------------
 // Spotify API Request Functions
 
-// Refresh Spotify token using refresh token
 void refreshSpotifyToken() {
   if (refreshToken == "") {
     Serial.println("No refresh token available!");
     return;
   }
   WiFiClientSecure client;
-  client.setInsecure();
+  client.setInsecure();  // Make connection insecure for Spotify API requests
   HTTPClient http;
   http.begin(client, "https://accounts.spotify.com/api/token");
   http.addHeader("Content-Type", "application/x-www-form-urlencoded");
@@ -275,7 +309,7 @@ void playSong() {
     refreshSpotifyToken();
   }
   WiFiClientSecure client;
-  client.setInsecure();
+  client.setInsecure();  // Insecure connection for Spotify API
   HTTPClient http;
   http.begin(client, "https://api.spotify.com/v1/me/player/play");
   http.addHeader("Authorization", "Bearer " + accessToken);
@@ -296,7 +330,7 @@ void pauseSong() {
     refreshSpotifyToken();
   }
   WiFiClientSecure client;
-  client.setInsecure();
+  client.setInsecure();  // Insecure connection
   HTTPClient http;
   http.begin(client, "https://api.spotify.com/v1/me/player/pause");
   http.addHeader("Authorization", "Bearer " + accessToken);
@@ -322,7 +356,7 @@ void nextSong() {
   artistScrollDelayStart = millis();
   
   WiFiClientSecure client;
-  client.setInsecure();
+  client.setInsecure();  // Insecure connection for Spotify API
   HTTPClient http;
   http.begin(client, "https://api.spotify.com/v1/me/player/next");
   http.addHeader("Authorization", "Bearer " + accessToken);
@@ -346,7 +380,7 @@ void previousSong() {
   artistScrollDelayStart = millis();
   
   WiFiClientSecure client;
-  client.setInsecure();
+  client.setInsecure();  // Insecure connection
   HTTPClient http;
   http.begin(client, "https://api.spotify.com/v1/me/player/previous");
   http.addHeader("Authorization", "Bearer " + accessToken);
@@ -369,7 +403,7 @@ void getSpotifyNowPlaying() {
   }
   
   WiFiClientSecure client;
-  client.setInsecure();
+  client.setInsecure();  // Insecure connection for Spotify API
   HTTPClient http;
   http.begin(client, "https://api.spotify.com/v1/me/player/currently-playing");
   http.addHeader("Authorization", "Bearer " + accessToken);
@@ -497,3 +531,6 @@ void loop() {
   
   delay(10);  // Short delay to prevent CPU overload
 }
+
+
+// adding the cert for the spotify might be needed if the endpoints are secure 

@@ -59,6 +59,7 @@ app.get('/callback', async (req, res) => {
 
   try {
     const response = await axios.post(tokenUrl, querystring.stringify(data), { headers: headers });
+    // Update the tokenData object with both access and refresh tokens
     tokenData.access_token = response.data.access_token;
     tokenData.refresh_token = response.data.refresh_token;
     console.log("Tokens generated:", tokenData);
