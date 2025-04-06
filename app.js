@@ -17,10 +17,6 @@ app.get('/form', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'form.html'));
 });
 
-app.get('/spotify/callback', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'success.html'));
-});
-
 const dataRoutes = require('./src/routes/dataRoutes.js');
 app.use('/data', dataRoutes);
 
