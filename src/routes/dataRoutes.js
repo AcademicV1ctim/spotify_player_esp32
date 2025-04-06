@@ -1,24 +1,18 @@
 // routes/dataRoutes.js
 const express = require('express');
-const { v5: uuidv5 } = require('uuid');
 const router = express.Router();
 const dataModel = require('../models/dataModel');
 const { error } = require('console');
 
-const NAMESPACE = process.env.UUID_NAMESPACE; 
-
 router.post('/register', async (req, res) => {
-  const { mac } = req.body;
+  const {mac} = req.body;
 
   if (!mac) {
-    return res.status(400).send('Missing MAC address.');
+    return res.status(400).send('Missing id.');
   }
 
   try {
-    const deviceId = uuidv5(mac, NAMESPACE);
-    console.log('Generated UUID:', deviceId);
-
-    dataModel.checkRefreshToken({ id: deviceId }, async (err, result) => {
+    dataModel.checkRefreshToken({id: mac}, async (err, result) => {
       if (err) {
         console.error('Error checking refresh token:', err);
         return res.status(500).send('Database error.');
@@ -31,11 +25,15 @@ router.post('/register', async (req, res) => {
         return res.redirect(`/success.html`);
       }
 
-      // 2. If not found, register new user
-      await dataModel.registerUser({ id: deviceId });
+      const result = await dataModel.registerUser({ id: mac });
 
-      console.log('New user registered:', deviceId);
-      return res.redirect(`/spotify/login?id=${deviceId}`); 
+      if (!result.success && result.message === 'User already exists') {
+        console.log('User already exists:', mac);
+      } else {
+        console.log('New user registered:', mac);
+      }
+
+      return res.redirect(`/spotify/login?id=${mac}`); 
     });
 
   } catch (err) {
@@ -46,23 +44,19 @@ router.post('/register', async (req, res) => {
 
 // Retrieve refresh token by device UUID
 router.get('/retrieve', async (req, res) => {
-  const { id: mac } = req.query; // ESP is sending MAC address as id
+  const {id: mac} = req.query; // ESP is sending MAC address as id
 
   if (!mac) {
     return res.status(400).json({ error: 'Missing id parameter' });
   }
 
-  // Convert MAC to UUIDv5
-  const deviceId = uuidv5(mac, NAMESPACE);
-  console.log('Converted UUID:', deviceId);
-
-  dataModel.checkRefreshToken({ id: deviceId }, (err, result) => {
+  dataModel.checkRefreshToken({id: mac}, (err, result) => {
     if (err) {
       console.error('Database error:', err);
       return res.status(500).json({ error: 'Database error' });
     }
 
-    if (result.rows.length === 0 || !result.rows[0].refresh_token) {
+    if (result.rows.length === 0 || !result.rows[0].refresh_token || result.rows[0].refresh_token == null) {
       return res.status(404).json({ error: 'Refresh token not found' });
     }
 

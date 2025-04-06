@@ -71,40 +71,4 @@ router.get('/callback', async (req, res) => {
   }
 });
 
-// Refresh token endpoint (if needed)
-router.post('/refresh', async (req, res) => {
-  const { refresh_token, device_id } = req.body;
-
-  if (!refresh_token || !device_id) {
-    return res.status(400).json({ error: 'Missing refresh token or device ID.' });
-  }
-
-  const tokenUrl = 'https://accounts.spotify.com/api/token';
-  const data = {
-    grant_type: 'refresh_token',
-    refresh_token: refresh_token
-  };
-
-  const headers = {
-    'Authorization': 'Basic ' + Buffer.from(clientID + ':' + clientSecret).toString('base64'),
-    'Content-Type': 'application/x-www-form-urlencoded'
-  };
-
-  try {
-    const response = await axios.post(tokenUrl, querystring.stringify(data), { headers: headers });
-
-    // Optional: log device activity or update last_seen column
-    console.log(`Device ${device_id} refreshed token`);
-
-    res.json({
-      access_token: response.data.access_token,
-      expires_in: response.data.expires_in
-    });
-  } catch (error) {
-    console.error(`Error refreshing token for device ${device_id}:`, error);
-    res.status(500).json({ error: 'Failed to refresh token.' });
-  }
-});
-
-
 module.exports = router;

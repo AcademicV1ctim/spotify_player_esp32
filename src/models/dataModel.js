@@ -2,13 +2,28 @@ const pool = require('../services/db.js');
 
 // Register user if not exists
 module.exports.registerUser = async (data) => {
-    const SQLSTATEMENT = `
+    const checkSQL = `
+        SELECT id FROM "Users" WHERE id = $1;
+    `;
+    const insertSQL = `
         INSERT INTO "Users" (id)
         VALUES ($1)
-        ON CONFLICT (id) DO NOTHING;
+        RETURNING id;
     `;
     const VALUES = [data.id];
-    return pool.query(SQLSTATEMENT, VALUES);
+
+    try {
+        const existing = await pool.query(checkSQL, VALUES);
+        if (existing.rows.length > 0) {
+            return { success: false, message: 'User already exists', userId: data.id };
+        }
+
+        const result = await pool.query(insertSQL, VALUES);
+        return { success: true, message: 'User registered successfully', userId: result.rows[0].id };
+    } catch (error) {
+        console.error('Error in registerUser:', error);
+        throw error;
+    }
 };
 
 // Check if refresh token exists for a user

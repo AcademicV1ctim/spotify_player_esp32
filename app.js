@@ -23,6 +23,7 @@ app.get('/spotify/callback', (req, res) => {
 
 const dataRoutes = require('./src/routes/dataRoutes.js');
 app.use('/data', dataRoutes);
+
 const SpotifyRoutes = require('./src/routes/spotifyRoutes.js');
 app.use('/spotify', SpotifyRoutes);
 
