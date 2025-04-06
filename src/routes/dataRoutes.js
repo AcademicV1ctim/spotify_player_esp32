@@ -35,7 +35,7 @@ router.post('/register', async (req, res) => {
       await dataModel.registerUser({ id: deviceId });
 
       console.log('New user registered:', deviceId);
-      return res.redirect(`/login?id=${deviceId}`); 
+      return res.redirect(`/spotify/login?id=${deviceId}`); 
     });
 
   } catch (err) {

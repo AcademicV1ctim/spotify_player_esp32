@@ -17,7 +17,7 @@ app.get('/form', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'form.html'));
 });
 
-app.get('/callback', (req, res) => {
+app.get('/spotify/callback', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'success.html'));
 });
 
