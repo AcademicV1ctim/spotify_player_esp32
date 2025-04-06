@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const axios = require('axios');
 const querystring = require('querystring');
+const dataModel = require('../models/dataModel');
 
 // Spotify credentials and redirect URI (update with your Render domain)
 const clientID = process.env.CLIENT_ID;
@@ -22,8 +23,9 @@ router.get('/login', (req, res) => {
     response_type: 'code',
     client_id: clientID,
     scope: scope,
-    redirect_uri: redirectURI, // must match exactly
-    state: deviceId // include UUID in state
+    redirect_uri: redirectURI, 
+    state: deviceId,
+    show_dialog: true
   });
   
   res.redirect(authUrl);

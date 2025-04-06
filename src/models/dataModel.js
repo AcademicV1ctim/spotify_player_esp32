@@ -28,20 +28,20 @@ module.exports.checkRefreshToken = async (data, callback) => {
     }
 };
 
-// Check if user exists and return refresh token (if any)
-module.exports.checkRefreshToken = async (data, callback) => {
+module.exports.updateRefreshToken = async (data) => {
     const SQLSTATEMENT = `
-      SELECT refresh_token 
-      FROM "Users" 
-      WHERE id = $1;
+      UPDATE "Users"
+      SET refresh_token = $1
+      WHERE id = $2;
     `;
-    const VALUES = [data.id];
+  
+    const VALUES = [data.refresh_token, data.id];
   
     try {
-      const result = await pool.query(SQLSTATEMENT, VALUES);
-      callback(null, result);
+      await pool.query(SQLSTATEMENT, VALUES);
+      console.log(`Refresh token updated for device: ${data.id}`);
     } catch (error) {
-      callback(error);
+      console.error('Error updating refresh token:', error);
+      throw error;
     }
-};
-  
+  };
