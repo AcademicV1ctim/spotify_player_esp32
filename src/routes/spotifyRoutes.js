@@ -3,6 +3,7 @@ const router = express.Router();
 const axios = require('axios');
 const querystring = require('querystring');
 const dataModel = require('../models/dataModel');
+const path = require('path');
 
 // Spotify credentials and redirect URI (update with your Render domain)
 const clientID = process.env.CLIENT_ID;
