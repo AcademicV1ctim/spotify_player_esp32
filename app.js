@@ -18,9 +18,9 @@ app.get('/callback', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'success.html'));
 });
 
-const dataRoutes = require('./routes/dataRoutes');
+const dataRoutes = require('./src/routes/dataRoutes.js');
 app.use('/data', dataRoutes);
-const SpotifyRoutes = require('./routes/spotifyRoutes.js');
+const SpotifyRoutes = require('./src/routes/spotifyRoutes.js');
 app.use('/spotify', SpotifyRoutes);
 
 server.listen(port, () => {
