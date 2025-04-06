@@ -1,18 +1,7 @@
-require('dotenv').config();
 const express = require('express');
+const router = express.Router();
 const axios = require('axios');
 const querystring = require('querystring');
-const app = express();
-const port = process.env.PORT || 3000;
-const http = require('http');
-const WebSocket = require('ws');
-const path = require('path');
-
-app.use(express.static(path.join(__dirname, 'public')));
-
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
 
 // Spotify credentials and redirect URI (update with your Render domain)
 const clientID = process.env.CLIENT_ID;
@@ -26,7 +15,7 @@ let tokenData = {
 };
 
 // Endpoint to redirect user to Spotify's OAuth page
-app.get('/login', (req, res) => {
+router.get('/login', (req, res) => {
   const scope = 'user-read-playback-state user-read-currently-playing user-modify-playback-state';
   const authUrl = 'https://accounts.spotify.com/authorize?' +
     querystring.stringify({
@@ -39,7 +28,7 @@ app.get('/login', (req, res) => {
 });
 
 // OAuth callback endpoint: Exchange code for tokens, broadcast them, then send success page
-app.get('/callback', async (req, res) => {
+router.get('/callback', async (req, res) => {
   const code = req.query.code || null;
   if (!code) {
     return res.status(400).send('Error: No authorization code provided.');
@@ -59,7 +48,6 @@ app.get('/callback', async (req, res) => {
 
   try {
     const response = await axios.post(tokenUrl, querystring.stringify(data), { headers: headers });
-    // Update the tokenData object with both access and refresh tokens
     tokenData.access_token = response.data.access_token;
     tokenData.refresh_token = response.data.refresh_token;
     console.log("Tokens generated:", tokenData);
@@ -80,7 +68,7 @@ app.get('/callback', async (req, res) => {
 });
 
 // Refresh token endpoint (if needed)
-app.get('/refresh', async (req, res) => {
+router.get('/refresh', async (req, res) => {
   const refreshToken = req.query.refresh_token;
   if (!refreshToken) {
     return res.status(400).send('Missing refresh token.');
@@ -107,23 +95,4 @@ app.get('/refresh', async (req, res) => {
     console.error("Error refreshing token:", error);
     res.status(500).send('Error refreshing token.');
   }
-});
-
-// Create HTTP server (Render handles TLS termination so external connections are HTTPS)
-const server = http.createServer(app);
-
-// Create a WebSocket server attached to the same HTTP server
-const wss = new WebSocket.Server({ server });
-
-wss.on('connection', (ws) => {
-  console.log('Client connected via WebSocket');
-  // Optionally, send a welcome message
-  ws.send(JSON.stringify({ message: "Welcome to the secure WebSocket server" }));
-  ws.on('message', (message) => {
-    console.log('Received from client:', message);
-  });
-});
-
-server.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
 });
