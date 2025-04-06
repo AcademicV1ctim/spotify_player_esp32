@@ -6,13 +6,7 @@ const querystring = require('querystring');
 // Spotify credentials and redirect URI (update with your Render domain)
 const clientID = process.env.CLIENT_ID;
 const clientSecret = process.env.CLIENT_SECRET;
-const redirectURI = "https://spotify-player-esp32.onrender.com/callback";
-
-// In-memory token storage
-let tokenData = {
-  access_token: null,
-  refresh_token: null,
-};
+const redirectURI = "https://spotify-player-esp32.onrender.com/spotify/callback";
 
 // Endpoint to redirect user to Spotify's OAuth page
 router.get('/login', (req, res) => {

@@ -35,7 +35,7 @@ router.post('/register', async (req, res) => {
       await dataModel.registerUser({ id: deviceId });
 
       console.log('New user registered:', deviceId);
-      return res.redirect(`/login?id=${deviceId}`); // Your login OAuth flow
+      return res.redirect(`/login?id=${deviceId}`); 
     });
 
   } catch (err) {
