@@ -65,7 +65,7 @@ router.get('/callback', async (req, res) => {
     await dataModel.updateRefreshToken({ id: deviceId, refresh_token: refreshToken });
 
     // Send success page
-    res.sendFile(path.join(__dirname, '..', 'public', 'success.html'));
+    res.sendFile(path.join(__dirname, '../../public/success.html'));
   } catch (error) {
     console.error("Error exchanging code for tokens:", error.response?.data || error.message);
     res.status(500).send('Error retrieving tokens.');
