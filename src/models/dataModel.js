@@ -27,3 +27,21 @@ module.exports.checkRefreshToken = async (data, callback) => {
         callback(error);
     }
 };
+
+// Check if user exists and return refresh token (if any)
+module.exports.checkRefreshToken = async (data, callback) => {
+    const SQLSTATEMENT = `
+      SELECT refresh_token 
+      FROM "Users" 
+      WHERE id = $1;
+    `;
+    const VALUES = [data.id];
+  
+    try {
+      const result = await pool.query(SQLSTATEMENT, VALUES);
+      callback(null, result);
+    } catch (error) {
+      callback(error);
+    }
+};
+  
