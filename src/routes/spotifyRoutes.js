@@ -96,3 +96,5 @@ router.get('/refresh', async (req, res) => {
     res.status(500).send('Error refreshing token.');
   }
 });
+
+module.exports = router;

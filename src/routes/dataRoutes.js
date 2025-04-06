@@ -5,7 +5,7 @@ const router = express.Router();
 const dataModel = require('../models/dataModel');
 const { error } = require('console');
 
-const NAMESPACE = process.env.UUIDv4; 
+const NAMESPACE = process.env.UUID_NAMESPACE; 
 
 router.post('/register', async (req, res) => {
   const { mac } = req.body;
@@ -20,11 +20,7 @@ router.post('/register', async (req, res) => {
     console.log('Generated UUID:', deviceId);
 
     // Store in Neon (Postgres) via dataModel
-    await dataModel.registerUser(deviceId);
-
-    if (!response.ok) {
-        return res.status(400).json({message: `${errorMessage}`})
-    }
+    await dataModel.registerUser({ id: deviceId });
 
     // Redirect or send response
     res.redirect('/login'); // or wherever your flow goes next

@@ -23,6 +23,6 @@ app.use('/data', dataRoutes);
 const SpotifyRoutes = require('./src/routes/spotifyRoutes.js');
 app.use('/spotify', SpotifyRoutes);
 
-server.listen(port, () => {
+app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });
