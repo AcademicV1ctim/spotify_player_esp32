@@ -24,7 +24,7 @@ router.post('/register', async (req, res) => {
         return res.status(500).send('Database error.');
       }
 
-      const hasToken = result.rows.length > 0 && result.rows[0].refresh_token;
+      const hasToken = result.rows.length > 0 && result.rows[0].refresh_token !== null;
 
       if (hasToken) {
         console.log('User already exists with token.');
@@ -43,7 +43,6 @@ router.post('/register', async (req, res) => {
     res.status(500).send('Server error.');
   }
 });
-
 
 // Retrieve refresh token by device UUID
 router.get('/retrieve', async (req, res) => {
