@@ -25,10 +25,10 @@ router.post('/register', async (req, res) => {
         return res.redirect(`/success.html`);
       }
 
-      const result = await dataModel.registerUser({ id: mac });
+      const registerResult = await dataModel.registerUser({ id: mac });
 
-      if (!result.success && result.message === 'User already exists') {
-        console.log('User already exists:', mac);
+      if (!registerResult.success && registerResult.message === 'User already exists') {
+        console.log('User already exists:');
       } else {
         console.log('New user registered:', mac);
       }
