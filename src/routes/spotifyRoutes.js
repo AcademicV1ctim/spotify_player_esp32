@@ -18,23 +18,21 @@ router.get('/login', (req, res) => {
 
   const scope = 'user-read-playback-state user-read-currently-playing user-modify-playback-state';
 
-  // Append the id to the redirect URI so we receive it in the callback
-  const redirectWithId = `${redirectURI}?id=${encodeURIComponent(deviceId)}`;
-
   const authUrl = 'https://accounts.spotify.com/authorize?' + querystring.stringify({
     response_type: 'code',
     client_id: clientID,
     scope: scope,
-    redirect_uri: redirectWithId
+    redirect_uri: redirectURI, // must match exactly
+    state: deviceId // include UUID in state
   });
-
+  
   res.redirect(authUrl);
 });
 
 // OAuth callback endpoint: Exchange code for tokens, broadcast them, then send success page
 router.get('/callback', async (req, res) => {
   const code = req.query.code || null;
-  const deviceId = req.query.id || null;
+  const deviceId = req.query.state;
 
   if (!code || !deviceId) {
     return res.status(400).send('Missing authorization code or device ID.');
