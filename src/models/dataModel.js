@@ -1,18 +1,22 @@
-const pool = require('../services/db.js');
+const supabase = require('../services/supabaseClient');
 
-// Check if refresh token exists for a user
-module.exports.checkRefreshToken = async (data, callback) => {
-    const SQLSTATEMENT = `
-        SELECT refresh_token 
-        FROM "Users" 
-        WHERE id = $1;
-    `;
-    const VALUES = [data.id];
-
-    try {
-        const result = await pool.query(SQLSTATEMENT, VALUES);
-        callback(null, result);
-    } catch (error) {
-        callback(error);
+module.exports = {
+    checkRefreshToken: async ({ id }) => {
+      const { data, error } = await supabase
+        .from('setup')
+        .select('refresh_token')
+        .eq('id', id)
+        .single();
+  
+      if (error) {
+        throw { code: 500, message: error.message };
+      }
+  
+      if (!data || !data.refresh_token) {
+        throw { code: 404, message: 'Refresh token not found' };
+      }
+  
+      return data;
     }
-};
+  };
+  
