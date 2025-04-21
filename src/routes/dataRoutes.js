@@ -2,47 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const dataModel = require('../models/dataModel');
-const { error } = require('console');
 
-router.post('/register', async (req, res) => {
-  const {mac} = req.body;
-
-  if (!mac) {
-    return res.status(400).send('Missing id.');
-  }
-
-  try {
-    dataModel.checkRefreshToken({id: mac}, async (err, result) => {
-      if (err) {
-        console.error('Error checking refresh token:', err);
-        return res.status(500).send('Database error.');
-      }
-
-      const hasToken = result.rows.length > 0 && result.rows[0].refresh_token !== null;
-
-      if (hasToken) {
-        console.log('User already exists with token.');
-        return res.redirect(`/success.html`);
-      }
-
-      const registerResult = await dataModel.registerUser({ id: mac });
-
-      if (!registerResult.success && registerResult.message === 'User already exists') {
-        console.log('User already exists:');
-      } else {
-        console.log('New user registered:', mac);
-      }
-
-      return res.redirect(`/spotify/login?id=${mac}`); 
-    });
-
-  } catch (err) {
-    console.error('Error in register route:', err);
-    res.status(500).send('Server error.');
-  }
-});
-
-// Retrieve refresh token by device UUID
 router.get('/retrieve', async (req, res) => {
   const {id: mac} = req.query; // ESP is sending MAC address as id
 
